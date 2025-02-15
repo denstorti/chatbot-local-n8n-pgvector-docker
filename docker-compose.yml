@@ -3,6 +3,7 @@ volumes:
   postgres_storage:
   ollama_storage:
   qdrant_storage:
+  pgvector_storage:
 
 networks:
   demo:
@@ -19,7 +20,10 @@ x-n8n: &service-n8n
     - N8N_PERSONALIZATION_ENABLED=false
     - N8N_ENCRYPTION_KEY
     - N8N_USER_MANAGEMENT_JWT_SECRET
-    - OLLAMA_HOST=ollama:11434
+    - NODE_FUNCTION_ALLOW_EXTERNAL=langchain/qdrant,langchain/community/embeddings/ollama
+    - OLLAMA_HOST=host.docker.internal:11434
+    # - OLLAMA_HOST=ollama:11434
+    
 
 x-ollama: &service-ollama
   image: ollama/ollama:latest
@@ -61,7 +65,24 @@ services:
       interval: 5s
       timeout: 5s
       retries: 10
-
+  
+  pgvector:
+    image: pgvector/pgvector:pg15
+    networks: ['demo']
+    container_name: pgvector
+    command: -p 5433
+    ports:
+     - 5433:5433
+    restart: always
+    environment:
+      - POSTGRES_DB=vectordb
+      - POSTGRES_USER=admin
+      - POSTGRES_PASSWORD=password
+      - POSTGRES_HOST_AUTH_METHOD=trust
+    volumes:
+     - ./pgvector-init.sql:/docker-entrypoint-initdb.d/init.sql
+     - pgvector_storage:/var/lib/postgresql/data
+    
   n8n-import:
     <<: *service-n8n
     hostname: n8n-import
@@ -90,6 +111,7 @@ services:
     depends_on:
       postgres:
         condition: service_healthy
+      
       n8n-import:
         condition: service_completed_successfully
 
@@ -104,9 +126,9 @@ services:
     volumes:
       - qdrant_storage:/qdrant/storage
 
-  ollama-cpu:
-    profiles: ["cpu"]
-    <<: *service-ollama
+  # ollama-cpu:
+  #   profiles: ["cpu"]
+  #   <<: *service-ollama
 
   ollama-gpu:
     profiles: ["gpu-nvidia"]
@@ -127,11 +149,11 @@ services:
       - "/dev/kfd"
       - "/dev/dri"
 
-  ollama-pull-llama-cpu:
-    profiles: ["cpu"]
-    <<: *init-ollama
-    depends_on:
-      - ollama-cpu
+  # ollama-pull-llama-cpu:
+  #   profiles: ["cpu"]
+  #   <<: *init-ollama
+  #   depends_on:
+  #     - ollama-cpu
 
   ollama-pull-llama-gpu:
     profiles: ["gpu-nvidia"]

@@ -1,3 +1,51 @@
+# Changes made on top of base setup
+> Note: this is based on OG https://github.com/n8n-io/self-hosted-ai-starter-kit?tab=readme-ov-file
+
+- Added PgVector for RAG
+- Added Postgres memory
+- Added local file ingestion flow
+- Added Qdrant as vector store (optional - set up for ingestion but not consumption)
+
+## Note for Mac Apple Silicon users
+
+I followed advice and run `ollama` locally instead of running on Docker. The served it separately and pointed to `host.docker.internal:11434` where needed in the model.
+
+
+# Quick start with `devbox`
+
+[`devbox`](https://www.jetify.com/docs/devbox/installing_devbox/) is great to manage dependencies and isolate dev environments. 
+
+If you installed it, you can simply run:
+```
+devbox shell
+```
+
+This will install ollama and download the models. 
+
+Open another terminal and:
+```
+docker compose --profile cpu up
+```
+
+### PgVector nodes
+
+Set up credentials with:
+- Host: `pgvector`
+- Database: `vectordb`
+- User: `admin` 
+- Password: `password` 
+- Port: `5433`
+
+### Reset N8N local password (don't affect workflows)
+
+- Run: 
+```
+docker exec -it  n8n n8n user-management:reset
+```
+- Stop and Start again docker compose 
+- Access `http://localhost:5678/setup`
+
+
 # Self-hosted AI starter kit
 
 **Self-hosted AI Starter Kit** is an open-source Docker Compose template designed to swiftly initialize a comprehensive local AI and low-code development environment.
@@ -25,6 +73,12 @@ store with an comprehensive API
 ✅ [**PostgreSQL**](https://www.postgresql.org/) -  Workhorse of the Data
 Engineering world, handles large amounts of data safely.
 
+✅ [**PgVector**](https://www.postgresql.org/) -  Postgres Vector extension
+
+✅ Qdrant - Open-source, high performance vector store with an comprehensive API
+
+
+
 ### What you can build
 
 ⭐️ **AI Agents** for scheduling appointments
@@ -34,6 +88,7 @@ Engineering world, handles large amounts of data safely.
 ⭐️ **Smarter Slack Bots** for enhanced company communications and IT operations
 
 ⭐️ **Private Financial Document Analysis** at minimal cost
+
 
 ## Installation
 
@@ -104,6 +159,7 @@ Additionally, after you see "Editor is now accessible via: <http://localhost:567
 1. Head to <http://localhost:5678/home/credentials>
 2. Click on "Local Ollama service"
 3. Change the base URL to "http://host.docker.internal:11434/"
+
 
 #### For everyone else
 
